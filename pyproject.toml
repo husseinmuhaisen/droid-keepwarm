@@ -1,0 +1,100 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "droid-keepwarm"
+version = "0.1.0"
+description = "Keep Factory Droid's prompt cache warm during breaks and warn before a cold send"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "droid-keepwarm contributors" }]
+keywords = ["factory", "droid", "prompt-cache", "anthropic", "cost"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development",
+]
+# Zero runtime dependencies: the hook runs inside Droid's event path and must
+# start fast and never break a session. Everything is stdlib.
+dependencies = []
+
+[project.scripts]
+droid-keepwarm = "keepwarm.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-cov>=6.0",
+  "ruff>=0.9",
+  "mypy>=1.14",
+  "hypothesis>=6.123",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/keepwarm"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W",   # pycodestyle
+  "F",        # pyflakes
+  "I",        # isort
+  "N",        # pep8-naming
+  "UP",       # pyupgrade
+  "ANN",      # annotations
+  "S",        # bandit
+  "B",        # bugbear
+  "SIM",      # simplify
+  "TRY",      # tryceratops
+  "RUF",      # ruff-specific
+  "C4",       # comprehensions
+  "DTZ",      # datetime timezone
+  "PTH",      # pathlib
+  "TID",      # tidy imports
+]
+# TRY003 (long exception messages) conflicts with actionable, user-facing
+# error text, which this project treats as a feature (ConfigError, CliError).
+ignore = [
+  "TRY003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S108", "E501", "ANN201", "ANN202"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+packages = ["keepwarm"]
+strict = true
+warn_unreachable = true
+disallow_any_generics = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = []
+
+[tool.coverage.run]
+source = ["src/keepwarm"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 85
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
